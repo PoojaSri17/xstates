@@ -7,22 +7,24 @@ const LocationSelector = () => {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
-
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // Loading state
 
   // Fetch all countries on component mount
   useEffect(() => {
     const fetchCountries = async () => {
+      setLoading(true); // Start loading
       try {
         const response = await axios.get('https://crio-location-selector.onrender.com/countries');
-        console.log('Countries fetched:', response.data); // Debugging line
         setCountries(response.data);
       } catch (error) {
-        console.error('Error fetching countries:', error);
+        setError('Error fetching countries. Please try again.');
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
 
@@ -33,15 +35,17 @@ const LocationSelector = () => {
   useEffect(() => {
     const fetchStates = async () => {
       if (selectedCountry) {
+        setLoading(true); // Start loading
         try {
           const response = await axios.get(`https://crio-location-selector.onrender.com/country=${selectedCountry}/states`);
-          console.log(`States for ${selectedCountry}:`, response.data); // Debugging line
           setStates(response.data);
-          setSelectedState(''); // Reset state selection
           setCities([]); // Reset cities when country changes
+          setSelectedState(''); // Reset state selection
           setSelectedCity(''); // Reset city selection
         } catch (error) {
-          console.error('Error fetching states:', error);
+          setError('Error fetching states. Please try again.');
+        } finally {
+          setLoading(false); // Stop loading
         }
       }
     };
@@ -53,13 +57,15 @@ const LocationSelector = () => {
   useEffect(() => {
     const fetchCities = async () => {
       if (selectedState) {
+        setLoading(true); // Start loading
         try {
           const response = await axios.get(`https://crio-location-selector.onrender.com/country=${selectedCountry}/state=${selectedState}/cities`);
-          console.log(`Cities for ${selectedState}, ${selectedCountry}:`, response.data); // Debugging line
           setCities(response.data);
           setSelectedCity(''); // Reset city selection
         } catch (error) {
-          console.error('Error fetching cities:', error);
+          setError('Error fetching cities. Please try again.');
+        } finally {
+          setLoading(false); // Stop loading
         }
       }
     };
@@ -84,6 +90,8 @@ const LocationSelector = () => {
   return (
     <div className="container"> {/* Add container class */}
       <h1>Location Selector</h1>
+      {error && <p className="error">{error}</p>} {/* Display error messages */}
+      {loading && <p>Loading...</p>} {/* Display loading message */}
 
       {/* Country Dropdown */}
       <div>
